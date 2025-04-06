@@ -37,19 +37,20 @@ gcc -o out file_toolkit.c
 
 ```
 ## Options
-Option	Long Option	Description
--c	--copy	Copy a file (source and destination required)
--t	--truncate	Truncate a file to 0 bytes
--x	--temp	Create and write to a temporary file
--d	--dup	Duplicate file descriptor
--u	--umask	Set umask and print old value
--a	--atomic	Atomically create a file
---check-flag	Check if a specific flag is set
---set-flag	Set a specific file flag
---clear-flag	Clear a specific file flag
--p	--pread	Read file using pread()
--l	--lock-read	Apply fcntl() read/write lock
--?	--help	Display help message
+
+-Option	Long Option	Description
+--c	--copy	Copy a file (source and destination required)
+--t	--truncate	Truncate a file to 0 bytes
+--x	--temp	Create and write to a temporary file
+--d	--dup	Duplicate file descriptor
+--u	--umask	Set umask and print old value
+--a	--atomic	Atomically create a file
+---check-flag	Check if a specific flag is set
+---set-flag	Set a specific file flag
+---clear-flag	Clear a specific file flag
+--p	--pread	Read file using pread()
+--l	--lock-read	Apply fcntl() read/write lock
+--?	--help	Display help message
 
 ## 🔧 Examples
 ```
