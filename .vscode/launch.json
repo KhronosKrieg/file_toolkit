@@ -1,0 +1,17 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "C/C++ Runner: Debug Session",
+      "type": "lldb",
+      "request": "launch",
+      "stopOnEntry": false,
+      "cwd": "/home/kali/Desktop/coding/projects/File_toolkit",
+      "program": "/home/kali/Desktop/coding/projects/File_toolkit/out",
+      "args": [],
+      "terminal": "external",
+      "MIMode": "gdb",
+      "miDebuggerPath": "gdb"
+    }
+  ]
+}
