@@ -16,20 +16,21 @@
 
 int main(int argc, char *argv[])
 {
+    /*Define an array of struct option to store long options for command-line parsing*/
     static struct option long_options[] = 
     {
-        {"copy",     required_argument, 0,  'c'},
-        {"truncate", required_argument, 0,  't'},
-        {"temp",     no_argument,       0 , 'x'},
-        {"dup",      required_argument, 0 , 'd'},
-        {"umask",    required_argument, 0,  'u'},
-        {"atomic",   required_argument, 0,  'a'},
+        {"copy",       required_argument, 0,  'c'},
+        {"truncate",   required_argument, 0,  't'},
+        {"temp",       no_argument,       0 , 'x'},
+        {"dup",        required_argument, 0 , 'd'},
+        {"umask",      required_argument, 0,  'u'},
+        {"atomic",     required_argument, 0,  'a'},
         {"check-flag", required_argument, 0, 500},
         {"set-flag",   required_argument, 0, 501},
         {"clear-flag", required_argument, 0, 502},
-        {"pread",    required_argument, 0,  'p'},
-        {"help",      no_argument,      0,  '?'},
-        {"lock-read",      required_argument,      0,  'l'},
+        {"pread",      required_argument, 0,  'p'},
+        {"help",       no_argument,       0,  '?'},
+        {"lock-read",  required_argument, 0,  'l'},
         {0, 0, 0, 0}
     };
 
@@ -43,18 +44,29 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+/* "c:t:h:xf:u:a:?": A string of short options (single characters) that the program accepts. The colon (:) after an option indicates that it requires an argument.*/
+/* - long_options: An array of struct option that defines the long options (multi-character options) that the program accepts.
+- &option_index: A pointer to an integer that stores the index of the current option in the long_options array.
+- opt: The current option being processed.
 
-    while ((opt = getopt_long(argc, argv, "c:t:h:xf:u:a:?", long_options, &option_index))!= -1)
+The getopt_long function returns the current option being processed, or -1 if there are no more options to process.*/
+    
+    while ((opt = getopt_long(argc, argv, "c:t:xd:u:a:p:l:?", long_options, &option_index))!= -1)
     {
         switch(opt)
         {
             case 'c':
-                if (optind >= argc)
+                if (optind >= argc) /*checks if a destination file is provided. optind is an index into the argv array, and argc is the total number of arguments. If optind is greater than or equal to argc, it means there are no more arguments, and therefore no destination file is provided.*/
                 {
                     fprintf(stderr, "Missing destination for copy\n");
                     return 1;
                 }
-                copy_file(optarg, argv[optind]);
+                //optarg is a pointer to the argument of an option. When an option requires an argument, optarg points to the argument string.
+                //optarg is a pointer to the argument that follows an option in the command line.
+                
+                //argv[optind] is the next command-line argument after the option that was just processed
+                //optind points to the next argument after the option that was just processed
+                copy_file(optarg, argv[optind]); // optind is an index into the argv array
                 break;
             case 't':
                 truncate_file(optarg, atol(argv[optind]));
@@ -123,7 +135,7 @@ int main(int argc, char *argv[])
                 
 
             case '?':
-                //print_usage(argv[0]);
+                print_usage(argv[0]);
                 return 0;
 
         }
@@ -131,6 +143,33 @@ int main(int argc, char *argv[])
 
     return 0;
 }
+
+void print_usage(const char *prog_name) {
+    printf("Usage: %s [OPTIONS]\n", prog_name);
+    printf("File Toolkit Utility - Perform various file operations\n\n");
+
+    printf("Options:\n");
+    printf("  -c, --copy <source> <dest>         Copy a file\n");
+    printf("  -t, --truncate <file>              Truncate file to 0 length\n");
+    printf("  -x, --temp                         Create and write to a temporary file\n");
+    printf("  -d, --dup <file>                   Duplicate file descriptor for the file\n");
+    printf("  -u, --umask <value>                Set umask and show the old value\n");
+    printf("  -a, --atomic <file>                Atomically create file if it doesn't exist\n");
+    printf("      --check-flag <file> <flag>     Check if a flag (e.g., O_APPEND) is set\n");
+    printf("      --set-flag <file> <flag>       Set a flag (e.g., O_APPEND)\n");
+    printf("      --clear-flag <file> <flag>     Clear a flag (e.g., O_APPEND)\n");
+    printf("  -p, --pread <file>                 Read file using pread()\n");
+    printf("  -l, --lock-read <file>             Apply a read/write lock using fcntl()\n");
+    printf("  -?, --help                         Show this help message\n\n");
+
+    printf("Examples:\n");
+    printf("  %s --copy file1.txt file2.txt\n", prog_name);
+    printf("  %s --set-flag file.txt O_APPEND\n", prog_name);
+    printf("  %s -u 022\n", prog_name);
+
+    printf("\nAvailable flags: O_APPEND, O_NONBLOCK, O_SYNC\n");
+}
+
 
 void copy_file(const char *src, const char *dst)
 {
@@ -153,7 +192,14 @@ void copy_file(const char *src, const char *dst)
         close(fd_src);
         return;
     }
-
+/*  - pread is a system call that reads from a file descriptor at a specified offset.
+    - fd_src is the file descriptor of the source file.
+    - buffer is the buffer where the read data is stored.
+    - BUF_SIZE is the size of the buffer.
+    - offset is the offset in the file where the read operation starts.
+    - The return value of pread is stored in bytes_read, which represents the number of bytes read.
+    - The loop continues as long as bytes_read is greater than 0.
+*/
     while ((bytes_read = pread(fd_src, buffer, BUF_SIZE, offset))> 0 )
     {
         bytes_written = pwrite(fd_dst, buffer, bytes_read, offset);
@@ -173,7 +219,8 @@ void copy_file(const char *src, const char *dst)
 
 int truncate_file(const char *filename, off_t size)
 {
-    if (truncate(filename, size) == -1) {
+    if (truncate(filename, size) == -1)  //size is the desired size of the file after truncation.
+    {
         perror("truncate");
         return -1;
     }
@@ -185,8 +232,7 @@ int truncate_file(const char *filename, off_t size)
 void create_temp_file()
 {
     struct stat sb;
-    struct timeval start, end;
-    char template[] = "/tmp/tempfileXXXXXX";
+    char template[] = "/tmp/tempfileXXXXXX";//XXXXXX in the string is a placeholder for a unique suffix that will be generated by mkstemp.
     int fd = mkstemp(template);
 
     if(fd == -1)
@@ -213,8 +259,15 @@ void create_temp_file()
 
 void set_umask_and_create_file(const char *mask_str, const char *filename)
 {
+/* The umask function sets the file mode creation mask, which determines the permissions of newly created files.
+- The new_mask value is used to clear bits in the file mode, i.e., if a bit is set in new_mask, the corresponding bit in the file mode will be cleared.
+*/
     mode_t new_mask = strtol(mask_str, NULL, 8);  // Convert from string (octal)
     mode_t old_mask = umask(new_mask);           // Set new umask, get old
+    /* umask is a function that sets the file mode creation mask.
+    - new_mask is the new umask to be set.
+    - The return value of umask is the previous umask, which is stored in the old_mask variable.
+*/
     printf("Old umask was: %03o, new umask is: %03o\n", old_mask, new_mask);
 
     int fd = open(filename, O_CREAT | O_WRONLY, 0777);
@@ -230,6 +283,15 @@ void set_umask_and_create_file(const char *mask_str, const char *filename)
 }
 void atomic_create_file(const char *filename)
 {
+    /* O_WRONLY is a flag that specifies the file should be opened in write-only mode.
+    - O_CREAT is a flag that specifies the file should be created if it doesn't exist.
+    - O_EXCL is a flag that ensures the file is created exclusively, i.e., if the file already exists, the open call will fail.
+    - 0644 is the mode (permissions) to be set for the file if it is created. In this case, the permissions are:
+        - 6 for the owner (read and write permissions)
+        - 4 for the group (read permission)
+        - 4 for others (read permission)
+
+*/
     int fd = open(filename, O_WRONLY | O_CREAT | O_EXCL, 0644);
     if (fd == -1) {
         perror("atomic open");
@@ -242,20 +304,22 @@ void atomic_create_file(const char *filename)
 
 void duplicate_fd(const char *filename)
 {
-    int fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    int fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0644); //This code opens a file in write-only mode, creating it if it doesn't exist, and truncating its contents if it does exist.
     if(fd == -1)
     {
         perror("bad open");
         return;
     }
-
-    if (dup2(fd, STDOUT_FILENO) == -1)
+/* - If the dup2 call is successful, the file descriptor fd is duplicated to STDOUT_FILENO.
+- This means that any writes to STDOUT_FILENO (e.g., using printf) will be redirected to the file associated with fd.
+*/
+    if (dup2(fd, STDOUT_FILENO) == -1) //duplicates a file descriptor to redirect the standard output.
     {
         perror("dup2");
         close(fd);
         return;
     }
-    printf("This goes into the file %s via STDOUT! \n", filename);
+    printf("This goes into the file %s via STDOUT! \n", filename); /*Normally this should get into standard output but we duplicated our file descriptor to redirect standard output. so this goes to file*/
     close(fd);
 }
 
@@ -274,7 +338,7 @@ void check_flag(const char *filename, const char *flag_str)
     int flag = get_flag_from_string(flag_str);
     if (flag == -1) return;
 
-    int curr_flags = fcntl(fd, F_GETFL);
+    int curr_flags = fcntl(fd, F_GETFL); //int curr_flags = fcntl(fd, F_GETFL);
     if (curr_flags == -1) 
     {
         perror("fcntl");
@@ -310,17 +374,24 @@ void modify_flag(const char *filename, const char *flag_str, int set_flag)
         return;
     }
 
+/* int new_flags = set_flag ? (curr_flags | flag) : (curr_flags & ~flag);
+  If set_flag is true (non-zero), the expression evaluates to curr_flags | flag.
+    - If set_flag is false (zero), the expression evaluates to curr_flags & ~flag.
+- If set_flag is true, the flag bit is set in the new_flags value.
+- If set_flag is false, the flag bit is cleared in the new_flags value.
+*/
     int new_flags = set_flag ? (curr_flags | flag) : (curr_flags & ~flag);
-    if (fcntl(fd, F_SETFL, new_flags) == -1) 
+    if (fcntl(fd, F_SETFL, new_flags) == -1) //This code sets the new flags for a file descriptor.
     {
         perror("fcntl - set");
-    } else 
+    } 
+    else 
     {
         printf("Successfully %s flag %s on %s\n", 
                set_flag ? "SET" : "CLEARED", flag_str, filename);
     }
 
-    int verify_flags = fcntl(fd, F_GETFL);
+    int verify_flags = fcntl(fd, F_GETFL); //Just to verify flag is set or cleared
     if (verify_flags & flag) {
         printf("Verified: %s is set!\n",flag_str);
     } else {
@@ -385,14 +456,29 @@ void lock_file(const char *filename, int lock_type)
 
     struct flock lock;
     lock.l_type =lock_type;
-    lock.l_whence = SEEK_SET;
-    lock.l_start = 0;
-    lock.l_len = 0;
+    lock.l_whence = SEEK_SET; /*This sets the starting point for the lock.
+    - SEEK_SET means the lock starts from the beginning of the file.*/
 
+    lock.l_start = 0; /*  0 means the lock starts from the beginning of the file.*/
+    lock.l_len = 0; /*  0 means the lock applies to the entire file.*/
+/* - lock_type can be one of the following:
+        - F_RDLCK: Read lock
+        - F_WRLCK: Write lock
+        - F_UNLCK: Unlock
+*/
+/* lock_type == F_WRLCK ? "WRITE" : "READ":
+    - This is a ternary expression that checks the value of lock_type.
+    - If lock_type is equal to F_WRLCK, the expression evaluates to "WRITE".
+    - If lock_type is not equal to F_WRLCK, the expression evaluates to "READ".
+*/
     printf("Attempting to acquire %s lock...\n",
                 lock_type == F_WRLCK ? "WRITE":"READ");
 
-    if(fcntl(fd, F_SETLKW, &lock) == -1)
+
+/*F_SETLKW is the command to set a lock on the file.
+    - &lock is a pointer to a struct flock object that describes the lock to be acquired.
+*/
+    if(fcntl(fd, F_SETLKW, &lock) == -1) 
     {
         perror("fnctl - locking");
         close(fd);
@@ -400,10 +486,10 @@ void lock_file(const char *filename, int lock_type)
     }
 
     printf("Lock acquired! Press Enter to release...\n");
-    getchar();
+    getchar();//This code reads a single character from the standard input.
 
-    lock.l_type = F_UNLCK;
-    if(fcntl(fd, F_SETLK, &lock) == -1)
+    lock.l_type = F_UNLCK; //unlock
+    if(fcntl(fd, F_SETLK, &lock) == -1) //F_SETLK is the command to set or release a lock.
     {
         perror("fnctl - unlocking");
     }
@@ -412,3 +498,16 @@ void lock_file(const char *filename, int lock_type)
     }
     close(fd);
 }
+
+
+
+/* The permissions are represented as a 3-digit octal number, where each digit represents the permissions for the owner, group, and others, respectively.
+- Each digit can have a value between 0 and 7, where:
+    - 0 means no permissions (---)
+    - 1 means execute permission (--x)
+    - 2 means write permission (-w-)
+    - 3 means write and execute permissions (-wx)
+    - 4 means read permission (r--)
+    - 5 means read and execute permissions (r-x)
+    - 6 means read and write permissions (rw-)
+    - 7 means read, write, and execute permissions (rwx)*/

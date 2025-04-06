@@ -14,7 +14,6 @@ void lock_file(const char *, int);
 int get_flag_from_string(const char *); 
 void check_flag(const char *, const char *); 
 void modify_flag(const char *, const char *, int ); 
-
-//void print_usage
+void print_usage(const char *);
 
 #endif
