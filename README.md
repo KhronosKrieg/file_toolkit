@@ -70,13 +70,31 @@ gcc -o out file_toolkit.c
 # Check if a flag is set
 ./out --check-flag file.txt O_APPEND
 
+# Clear a flag 
+./out --clear-flag file.txt O_UNBLOCK
+
 # Set umask to 022
-./out --umask 022
+./out --umask 022 file.txt
+ls -l file.txt
 
 # Lock file for writing
 ./out --lock-read file.txt
 
 ```
 
+## File Locking usage with --lock-read
 
-`
+The --lock-read option demonstrates file locking using fcntl() with either a read lock or write lock.
+
+### 🧪 Test in Two Terminals:
+Terminal 1 (acquire WRITE lock):
+```
+./out --lock-read -w file.txt 
+
+```
+Terminal 2 (try to acquire READ or WRITE lock):
+```
+./out --lock-read -r file.txt 
+
+```
+This will block until the first lock is released (if your program is implemented to wait), or it will fail if you designed it that way.
