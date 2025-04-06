@@ -24,5 +24,10 @@ Make sure you have `gcc` installed.
 ```bash
 make
 
+```
+Or compile manually:
+'''
 
+gcc -o out file_toolkit.c
 
+'''
