@@ -9,10 +9,11 @@ void show_file_flags(const char *);
 void set_umask_and_create_file(const char *, const char *);
 void atomic_create_file(const char *);
 void duplicate_fd(const char *);
-void inspect_and_toggle_append(const char *);
-void toggle_append_flag(int);
-void inspect_fd_flags(int);
 void demo_pread_pwrite(const char *);
+void lock_file(const char *, int);
+int get_flag_from_string(const char *); 
+void check_flag(const char *, const char *); 
+void modify_flag(const char *, const char *, int ); 
 
 //void print_usage
 

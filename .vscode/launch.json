@@ -7,7 +7,7 @@
       "request": "launch",
       "stopOnEntry": false,
       "cwd": "/home/kali/Desktop/coding/projects/File_toolkit",
-      "program": "/home/kali/Desktop/coding/projects/File_toolkit/out",
+      "program": "/home/kali/Desktop/coding/projects/File_toolkit/build/Debug/outDebug",
       "args": [],
       "terminal": "external",
       "MIMode": "gdb",
